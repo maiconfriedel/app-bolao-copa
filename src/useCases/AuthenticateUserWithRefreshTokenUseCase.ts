@@ -8,7 +8,7 @@ class AuthenticateUserWithRefreshTokenUseCase {
   async execute(refreshToken: string) {
     const now = dayjs().unix();
 
-    const refresh_token = await prismaClient.refreshToken.findFirst({
+    let refresh_token = await prismaClient.refreshToken.findFirst({
       where: {
         id: refreshToken,
       },
@@ -55,6 +55,19 @@ class AuthenticateUserWithRefreshTokenUseCase {
         issuer: user.id,
       }
     );
+
+    await prismaClient.refreshToken.deleteMany({
+      where: {
+        userId: user.id,
+      },
+    });
+
+    refresh_token = await prismaClient.refreshToken.create({
+      data: {
+        userId: user.id,
+        expiresAt: dayjs().add(30, "days").unix(),
+      },
+    });
 
     return {
       access_token,
