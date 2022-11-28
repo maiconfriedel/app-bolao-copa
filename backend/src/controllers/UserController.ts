@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { handleUseCaseError } from "../handlers/handleUseCaseError";
+import { UserSchema } from "../models/schemas/user.schema";
 import { CreateUserUseCase } from "../useCases/CreateUserUseCase";
 import { ListUsersUseCase } from "../useCases/ListUsersUseCase";
 
@@ -17,6 +18,14 @@ class UserController {
 
   async post(req: Request, res: Response) {
     try {
+      const validationResult = UserSchema.validate(req.body, {
+        abortEarly: false,
+      });
+
+      if (validationResult.error) {
+        return res.status(400).json(validationResult.error);
+      }
+
       const { name, email, password, avatar_url } = req.body;
 
       const createUserUseCase = new CreateUserUseCase();
